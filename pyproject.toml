@@ -32,6 +32,7 @@ test = [
     "pytest>=4.0.0",
     "pytest-cov",
     "tox",
+    "freezegun",
 ]
 
 [build-system]
