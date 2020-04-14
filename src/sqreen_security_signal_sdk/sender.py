@@ -27,6 +27,11 @@ if sys.version_info >= (3, 5):
 
 class SenderJSONEncoder(json.JSONEncoder):
 
+    def encode(self, obj):  # type: (Any) -> str
+        if isinstance(obj, bytes):
+            obj = obj.decode("utf-8", errors="replace")
+        return super(SenderJSONEncoder, self).encode(obj)
+
     def default(self, obj):  # type: (Any) -> Optional[str]
         """Return the repr of unknown objects.
         """
