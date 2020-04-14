@@ -38,7 +38,7 @@ jobs:
         flit install --symlink
     - name: Test with pytest
       run: |
-        tox -- --cov=src/sqreen_security_signal_sdk --cov-report=xml tests
+        tox -p auto -- tests
       env:
         TOX_PARALLEL_NO_SPINNER: 1
     - name: Upload coverage to Codecov
