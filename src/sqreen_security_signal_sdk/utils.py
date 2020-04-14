@@ -11,6 +11,8 @@ import sys
 
 if sys.version_info >= (3, 5):
     from typing import Mapping, Iterable
+
+    string_type = str
 elif sys.version_info[0] >= 3:
     from collections.abc import Mapping, Iterable
 
