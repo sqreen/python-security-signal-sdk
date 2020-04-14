@@ -14,7 +14,7 @@ class SenderJSONEncoderTestCase(unittest.TestCase):
             "payload": {}
         }
         expected = {
-            "signal_name": "�",
+            "signal_name": "\\xe9",
             "payload": {}
         }
         result = json.loads(Sender().serialize_data(data))

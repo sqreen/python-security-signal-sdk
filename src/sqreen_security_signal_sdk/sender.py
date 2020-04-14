@@ -4,7 +4,6 @@
 #
 #     https://www.sqreen.io/terms.html
 #
-import datetime
 import json
 import sys
 
@@ -13,6 +12,7 @@ from urllib3 import poolmanager, util  # type: ignore
 from .compat_model import Batch, Signal, Trace
 from .exceptions import (AuthenticationFailed, DataIngestionFailed,
                          UnexpectedStatusCode)
+from .utils import CustomJSONEncoder, reencode_payload
 
 if sys.version_info[0] >= 3:
     from urllib import parse as urlparse
@@ -25,24 +25,6 @@ if sys.version_info >= (3, 5):
     from .compat_model import AnySignal
 
 
-class SenderJSONEncoder(json.JSONEncoder):
-
-    def encode(self, obj):  # type: (Any) -> str
-        if isinstance(obj, bytes):
-            obj = obj.decode("utf-8", errors="replace")
-        return super(SenderJSONEncoder, self).encode(obj)
-
-    def default(self, obj):  # type: (Any) -> Optional[str]
-        """Return the repr of unknown objects.
-        """
-        if isinstance(obj, bytes):
-            return obj.decode("utf-8", errors="replace")
-        elif isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-        else:
-            return repr(obj)
-
-
 class BaseSender(object):
     """Base sender for the Sqreen Ingestion service.
 
@@ -53,7 +35,7 @@ class BaseSender(object):
     """
 
     default_base_url = "https://ingestion.sqreen.com/"  # type: str
-    default_json_encoder = SenderJSONEncoder
+    default_json_encoder = CustomJSONEncoder
 
     def __init__(self, base_url=None, proxy_url=None, headers={}, json_encoder=None):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
@@ -80,7 +62,13 @@ class BaseSender(object):
 
     def serialize_data(self, data):
         # type: (Union[AnySignal, Batch]) -> str
-        return json.dumps(data, separators=(",", ":"), cls=self.json_encoder)
+        try:
+            return json.dumps(
+                data, separators=(",", ":"), cls=self.json_encoder)
+        except UnicodeDecodeError:
+            reencoded_data = reencode_payload(data)
+            return json.dumps(
+                reencoded_data, separators=(",", ":"), cls=self.json_encoder)
 
     def handle_response(self, response):
         if response.status not in(200, 202):
