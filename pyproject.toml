@@ -1,0 +1,38 @@
+[tool.flit.metadata]
+module = "sqreen_security_signal_sdk"
+description-file = "README.md"
+home-page = "https://github.com/sqreen/python-security-signal-sdk"
+author = "Sqreen"
+author-email = "support@sqreen.com"
+requires = [
+    "urllib3>=1.25",
+    "typing; python_version<'3.6'",
+]
+classifiers=[
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Security",
+]
+
+[tool.flit.metadata.requires-extra]
+dev = [
+    "pre-commit",
+    "mypy",
+    "flake8",
+    "isort",
+]
+test = [
+    "pytest >=4.0.0",
+    "pytest-cov",
+]
+
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
