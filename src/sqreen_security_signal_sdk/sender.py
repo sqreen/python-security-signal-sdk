@@ -48,7 +48,7 @@ class BaseSender(object):
     """
 
     default_base_url = "https://ingestion.sqreen.com/"  # type: str
-    default_json_encoder = json.JSONEncoder
+    default_json_encoder = SenderJSONEncoder
 
     def __init__(self, base_url=None, proxy_url=None, headers={}, json_encoder=None):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
