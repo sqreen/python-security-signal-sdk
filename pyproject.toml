@@ -29,8 +29,9 @@ dev = [
     "isort",
 ]
 test = [
-    "pytest >=4.0.0",
+    "pytest>=4.0.0",
     "pytest-cov",
+    "tox",
     "freezegun",
 ]
 

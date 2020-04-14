@@ -38,7 +38,7 @@ jobs:
         flit install --symlink
     - name: Test with pytest
       run: |
-        pytest --cov=src/sqreen_security_signal_sdk --cov-report=xml tests
+        tox -p auto --cov=src/sqreen_security_signal_sdk --cov-report=xml tests
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
