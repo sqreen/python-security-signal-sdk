@@ -5,9 +5,11 @@
 #     https://www.sqreen.io/terms.html
 #
 import json
+import logging
 import sys
 
-from urllib3 import poolmanager, util  # type: ignore
+from urllib3 import Retry, poolmanager, util  # type: ignore
+from urllib3.exceptions import HTTPError, MaxRetryError  # type: ignore
 
 from .compat_model import Batch, Signal, Trace
 from .exceptions import (AuthenticationFailed, DataIngestionFailed,
@@ -23,6 +25,9 @@ if sys.version_info >= (3, 5):
     from typing import Any, Mapping, Optional, Union, Type
 
     from .compat_model import AnySignal
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class BaseSender(object):
@@ -71,7 +76,7 @@ class BaseSender(object):
                 reencoded_data, separators=(",", ":"), cls=self.json_encoder)
 
     def handle_response(self, response):
-        if response.status not in(200, 202):
+        if response.status not in (200, 202):
             if response.status == 422:
                 raise DataIngestionFailed
             elif response.status in (401, 403):
@@ -95,6 +100,12 @@ class BlockingSender(BaseSender):
     """
 
     max_pool_size = 10
+    retry_policy = Retry(
+        total=3,
+        method_whitelist=False,
+        status_forcelist={500, 502, 503, 504, 408},
+        raise_on_status=True,
+    )
 
     def __init__(self, base_url=None, proxy_url=None, headers={}, json_encoder=None):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
@@ -123,16 +134,25 @@ class BlockingSender(BaseSender):
         request_headers = dict(self.headers)
         request_headers["Content-Type"] = "application/json"
         request_headers.update(headers)
-        response = self.pool_manager.urlopen(
-            "POST", self._url(endpoint),
-            body=body,
-            headers=request_headers,
-            preload_content=True,
-            release_conn=True,
-            redirect=False,
-            **kwargs
-        )
-        return self.handle_response(response)
+        url = self._url(endpoint)
+        try:
+            response = self.pool_manager.urlopen(
+                "POST",
+                url,
+                body=body,
+                headers=request_headers,
+                preload_content=True,
+                release_conn=True,
+                redirect=False,
+                retries=self.retry_policy,
+                **kwargs
+            )
+        except (MaxRetryError, HTTPError) as exc:
+            LOGGER.info(
+                "Couldn't connect to %s due to exception %s", url, type(exc).__name__
+            )
+        else:
+            return self.handle_response(response)
 
     def close(self, timeout=None):
         # type: (Optional[float]) -> None
