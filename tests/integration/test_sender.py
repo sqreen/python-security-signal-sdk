@@ -46,6 +46,13 @@ class DataIngestionFailedHandler(server.BaseHTTPRequestHandler):
 class UnexpectedFailureHandler(server.BaseHTTPRequestHandler):
 
     def do_POST(self):
+        self.send_error(506)
+        self.end_headers()
+
+
+class RetryFailureHandler(server.BaseHTTPRequestHandler):
+
+    def do_POST(self):
         self.send_error(500)
         self.end_headers()
 
@@ -106,6 +113,11 @@ class BlockingSenderTestCase(unittest.TestCase):
         s = BlockingSender(base_url=self.fake_server_url)
         with self.assertRaises(UnexpectedStatusCode):
             s.send("/traces", {"data": {}})
+
+    def test_send_retry(self):
+        self.fake_server.RequestHandlerClass = RetryFailureHandler
+        s = BlockingSender(base_url=self.fake_server_url)
+        s.send("/traces", {"data": {}})
 
     def test_close(self):
         s = BlockingSender(base_url=self.fake_server_url)
