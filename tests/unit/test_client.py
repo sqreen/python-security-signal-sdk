@@ -11,7 +11,6 @@ class FakeSender(BaseSender):
         self.sent_data = []
 
     def send(self, endpoint, data, headers={}, **kwargs):
-        # Do not send anything but client.sender.sent_dataurn the input data if not closed.
         if hasattr(self, "closed"):
             raise RuntimeError
         self.sent_data.append(data)

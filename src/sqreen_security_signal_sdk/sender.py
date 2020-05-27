@@ -10,6 +10,7 @@ import sys
 
 from urllib3 import Retry, poolmanager, util  # type: ignore
 from urllib3.exceptions import HTTPError, MaxRetryError  # type: ignore
+from urllib3.util import Timeout
 
 from .compat_model import Batch, Signal, Trace
 from .exceptions import (AuthenticationFailed, DataIngestionFailed,
@@ -105,6 +106,7 @@ class SyncSender(BaseSender):
         status_forcelist={500, 502, 503, 504, 408},
         raise_on_status=True,
     )
+    timeout_policy = Timeout(connect=10, read=10)
 
     def __init__(self, base_url=None, proxy_url=None, headers={}, json_encoder=None):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
@@ -144,6 +146,7 @@ class SyncSender(BaseSender):
                 release_conn=True,
                 redirect=False,
                 retries=self.retry_policy,
+                timeout=self.timeout_policy,
                 **kwargs
             )
         except (MaxRetryError, HTTPError) as exc:
