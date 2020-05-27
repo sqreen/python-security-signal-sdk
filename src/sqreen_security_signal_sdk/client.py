@@ -5,11 +5,12 @@
 #     https://www.sqreen.io/terms.html
 #
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from .__about__ import __version__
 from .accumulator import BatchingAccumulator
 from .compat_model import Signal, SignalType, Trace
-from .sender import BlockingSender
+from .sender import SyncSender
 
 if sys.version_info >= (3, 5):
     from typing import Any, Optional
@@ -17,7 +18,7 @@ if sys.version_info >= (3, 5):
     from .compat_model import AnySignal
 
 
-class BlockingClient(object):
+class SyncClient(object):
     """Send signals to the Sqreen Ingestion service.
 
     :param token: Your application API token.
@@ -29,7 +30,7 @@ class BlockingClient(object):
     """
 
     accumulator_class = BatchingAccumulator
-    sender_class = BlockingSender
+    sender_class = SyncSender
 
     user_agent = "sqreen-python-security-signal-sdk/{}".format(__version__)
 
@@ -48,6 +49,7 @@ class BlockingClient(object):
         self.sender = self.sender_class(proxy_url=proxy_url, headers=headers)
         self.accumulator = self.accumulator_class(
             max_batch_size=max_batch_size, linger_time=interval_batch)
+        self.executor = ThreadPoolExecutor()
 
     def point(self, signal_name, payload, **properties):  # type: (str, Any, **Any) -> None
         """Record a point signal to be sent."""
@@ -74,7 +76,7 @@ class BlockingClient(object):
     def _add_and_send(self, data):  # type: (AnySignal) -> None
         batch = self.accumulator.add(data)
         if batch:
-            return self.sender.send_batch(batch)
+            self.executor.submit(self.sender.send_batch, batch)
 
     def flush(self, soft=False):  # type: (bool) -> None
         """Send all pending signals and traces.
@@ -86,13 +88,11 @@ class BlockingClient(object):
         if batch:
             return self.sender.send_batch(batch)
 
-    def close(self, timeout=None):  # type: (Optional[float]) -> None
+    def close(self):  # type: () -> None
         """Close the client.
-
-        :param timeout: (optional) Time to wait for the client to close in
-        seconds. Default is to block until all data is sent.
         """
-        return self.sender.close(timeout=timeout)
+        self.executor.shutdown(wait=True)
+        self.sender.close()
 
 
-Client = BlockingClient
+Client = SyncClient

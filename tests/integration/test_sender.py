@@ -7,7 +7,7 @@ import unittest
 from sqreen_security_signal_sdk.exceptions import (AuthenticationFailed,
                                                    DataIngestionFailed,
                                                    UnexpectedStatusCode)
-from sqreen_security_signal_sdk.sender import BlockingSender
+from sqreen_security_signal_sdk.sender import SyncSender
 
 if sys.version_info[0] >= 3:
     from http import server
@@ -65,7 +65,7 @@ class FakeProxyHandler(FakeIngestionHandler):
         return FakeIngestionHandler.do_POST(self)
 
 
-class BlockingSenderTestCase(unittest.TestCase):
+class SyncSenderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.fake_server = None
@@ -88,8 +88,8 @@ class BlockingSenderTestCase(unittest.TestCase):
         self.fake_server.serve_forever()
 
     def test_send(self):
-        s = BlockingSender(base_url=self.fake_server_url,
-                           headers={"X-Test-Client": "hello"})
+        s = SyncSender(base_url=self.fake_server_url,
+                       headers={"X-Test-Client": "hello"})
         ret = s.send_trace({"data": {}}, headers={"X-Test-Request": "world"})
         self.assertIsNone(ret)
         ret = s.send_signal({"signal_name": "test", "payload": {}},
@@ -98,37 +98,37 @@ class BlockingSenderTestCase(unittest.TestCase):
 
     def test_send_auth_failed(self):
         self.fake_server.RequestHandlerClass = AuthenticationFailedHandler
-        s = BlockingSender(base_url=self.fake_server_url)
+        s = SyncSender(base_url=self.fake_server_url)
         with self.assertRaises(AuthenticationFailed):
             s.send("/traces", {"data": {}})
 
     def test_send_data_ingestion_failed(self):
         self.fake_server.RequestHandlerClass = DataIngestionFailedHandler
-        s = BlockingSender(base_url=self.fake_server_url)
+        s = SyncSender(base_url=self.fake_server_url)
         with self.assertRaises(DataIngestionFailed):
             s.send("/traces", {"data": {}})
 
     def test_send_unexpected_status(self):
         self.fake_server.RequestHandlerClass = UnexpectedFailureHandler
-        s = BlockingSender(base_url=self.fake_server_url)
+        s = SyncSender(base_url=self.fake_server_url)
         with self.assertRaises(UnexpectedStatusCode):
             s.send("/traces", {"data": {}})
 
     def test_send_retry(self):
         self.fake_server.RequestHandlerClass = RetryFailureHandler
-        s = BlockingSender(base_url=self.fake_server_url)
+        s = SyncSender(base_url=self.fake_server_url)
         s.send("/traces", {"data": {}})
 
     def test_close(self):
-        s = BlockingSender(base_url=self.fake_server_url)
+        s = SyncSender(base_url=self.fake_server_url)
         s.close()
         with self.assertRaises(Exception):
             s.send("/traces", {"data": {}})
 
     def test_proxy(self):
         self.fake_server.RequestHandlerClass = FakeProxyHandler
-        s = BlockingSender(proxy_url=self.fake_server_url,
-                           base_url="http://ingestion.sqreen.com/",
-                           headers={"X-Test-Client": "hello"})
+        s = SyncSender(proxy_url=self.fake_server_url,
+                       base_url="http://ingestion.sqreen.com/",
+                       headers={"X-Test-Client": "hello"})
         ret = s.send_trace({"data": {}}, headers={"X-Test-Request": "world"})
         self.assertIsNone(ret)

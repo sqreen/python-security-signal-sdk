@@ -84,12 +84,11 @@ class BaseSender(object):
             raise UnexpectedStatusCode(response.status)
         # ignore the response content for now
 
-    def close(self, timeout=None):
-        # type: (Optional[float]) -> None
+    def close(self):  # type: () -> None
         raise NotImplementedError
 
 
-class BlockingSender(BaseSender):
+class SyncSender(BaseSender):
     """
     Sender based on urllib3 for the Ingestion service.
 
@@ -111,7 +110,7 @@ class BlockingSender(BaseSender):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
         base_headers = util.make_headers(keep_alive=True, accept_encoding=True)
         base_headers.update(headers)
-        super(BlockingSender, self).__init__(
+        super(SyncSender, self).__init__(
             base_url=base_url, proxy_url=proxy_url, headers=base_headers,
             json_encoder=json_encoder)
 
@@ -154,10 +153,9 @@ class BlockingSender(BaseSender):
         else:
             return self.handle_response(response)
 
-    def close(self, timeout=None):
-        # type: (Optional[float]) -> None
+    def close(self):  # type: () -> None
         self.pool_manager.clear()
         del self.pool_manager
 
 
-Sender = BlockingSender
+Sender = SyncSender
