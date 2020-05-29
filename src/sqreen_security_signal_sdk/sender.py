@@ -10,6 +10,7 @@ import sys
 
 from urllib3 import Retry, poolmanager, util  # type: ignore
 from urllib3.exceptions import HTTPError, MaxRetryError  # type: ignore
+from urllib3.util import Timeout
 
 from .compat_model import Batch, Signal, Trace
 from .exceptions import (AuthenticationFailed, DataIngestionFailed,
@@ -84,12 +85,11 @@ class BaseSender(object):
             raise UnexpectedStatusCode(response.status)
         # ignore the response content for now
 
-    def close(self, timeout=None):
-        # type: (Optional[float]) -> None
+    def close(self):  # type: () -> None
         raise NotImplementedError
 
 
-class BlockingSender(BaseSender):
+class SyncSender(BaseSender):
     """
     Sender based on urllib3 for the Ingestion service.
 
@@ -106,12 +106,13 @@ class BlockingSender(BaseSender):
         status_forcelist={500, 502, 503, 504, 408},
         raise_on_status=True,
     )
+    timeout_policy = Timeout(connect=10, read=10)
 
     def __init__(self, base_url=None, proxy_url=None, headers={}, json_encoder=None):
         # type: (Optional[str], Optional[str], Mapping[str, str], Optional[Type[json.JSONEncoder]]) -> None
         base_headers = util.make_headers(keep_alive=True, accept_encoding=True)
         base_headers.update(headers)
-        super(BlockingSender, self).__init__(
+        super(SyncSender, self).__init__(
             base_url=base_url, proxy_url=proxy_url, headers=base_headers,
             json_encoder=json_encoder)
 
@@ -145,6 +146,7 @@ class BlockingSender(BaseSender):
                 release_conn=True,
                 redirect=False,
                 retries=self.retry_policy,
+                timeout=self.timeout_policy,
                 **kwargs
             )
         except (MaxRetryError, HTTPError) as exc:
@@ -154,10 +156,9 @@ class BlockingSender(BaseSender):
         else:
             return self.handle_response(response)
 
-    def close(self, timeout=None):
-        # type: (Optional[float]) -> None
+    def close(self):  # type: () -> None
         self.pool_manager.clear()
         del self.pool_manager
 
 
-Sender = BlockingSender
+Sender = SyncSender
