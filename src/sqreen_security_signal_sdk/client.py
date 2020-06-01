@@ -33,6 +33,7 @@ class SyncClient(object):
     sender_class = SyncSender
 
     user_agent = "sqreen-python-security-signal-sdk/{}".format(__version__)
+    max_workers = 2
 
     def __init__(self, token, app_name=None, proxy_url=None, max_batch_size=50,
                  interval_batch=60, session_token=False):
@@ -49,7 +50,7 @@ class SyncClient(object):
         self.sender = self.sender_class(proxy_url=proxy_url, headers=headers)
         self.accumulator = self.accumulator_class(
             max_batch_size=max_batch_size, linger_time=interval_batch)
-        self.executor = ThreadPoolExecutor()
+        self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
 
     def point(self, signal_name, payload, **properties):  # type: (str, Any, **Any) -> None
         """Record a point signal to be sent."""
@@ -86,7 +87,7 @@ class SyncClient(object):
         """
         batch = self.accumulator.flush(soft=soft)
         if batch:
-            return self.sender.send_batch(batch)
+            self.executor.submit(self.sender.send_batch, batch)
 
     def close(self):  # type: () -> None
         """Close the client.
