@@ -54,12 +54,12 @@ class SyncClient(object):
 
     def point(self, signal_name, payload, **properties):  # type: (str, Any, **Any) -> None
         """Record a point signal to be sent."""
-        properties["type"] = SignalType.POINT.value
+        properties["type"] = SignalType.POINT
         return self.signal(signal_name, payload, **properties)
 
     def metric(self, signal_name, payload, **properties):  # type: (str, Any, **Any) -> None
         """Record a metric signal to be sent."""
-        properties["type"] = SignalType.METRIC.value
+        properties["type"] = SignalType.METRIC
         return self.signal(signal_name, payload, **properties)
 
     def signal(self, signal_name, payload, **properties):  # type: (str, Any, **Any) -> None
