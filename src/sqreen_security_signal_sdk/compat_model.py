@@ -17,7 +17,7 @@ elif sys.version_info >= (3, 5):
     from enum import Enum
     from typing import Any, Dict, List, Union
 
-    class SignalType(Enum):
+    class SignalType(str, Enum):
         POINT = "point"
         METRIC = "metric"
 
@@ -33,15 +33,11 @@ elif sys.version_info >= (3, 5):
         pass
 
 else:
-    # Compatibility types for Python environments without the typing module.
-    class SignalType:
-        class POINT:
-            name = "POINT"
-            value = "point"
+    from enum import Enum
 
-        class METRIC:
-            name = "METRIC"
-            value = "metric"
+    class SignalType(str, Enum):
+        POINT = "point"
+        METRIC = "metric"
 
     class Signal(dict):
         """

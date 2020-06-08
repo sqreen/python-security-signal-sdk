@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, List, Sequence, TypedDict, Union
 
 
-class SignalType(Enum):
+class SignalType(str, Enum):
     POINT = "point"
     METRIC = "metric"
 
