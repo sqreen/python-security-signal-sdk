@@ -34,8 +34,7 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade flit
-        flit install --symlink
+        python -m pip install --upgrade tox
     - name: Test with pytest
       run: |
         tox -p auto -- tests
