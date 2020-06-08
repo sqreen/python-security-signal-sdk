@@ -33,7 +33,7 @@ elif sys.version_info >= (3, 5):
         pass
 
 else:
-    from enum34 import Enum
+    from enum import Enum
 
     class SignalType(str, Enum):
         POINT = "point"
