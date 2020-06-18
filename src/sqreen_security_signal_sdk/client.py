@@ -48,7 +48,7 @@ class SyncClient(object):
             if app_name is not None:
                 headers["X-App-Name"] = app_name
 
-        self.sender = self.sender_class(base_url=None, proxy_url=proxy_url, headers=headers)
+        self.sender = self.sender_class(base_url=base_url, proxy_url=proxy_url, headers=headers)
         self.accumulator = self.accumulator_class(
             max_batch_size=max_batch_size, linger_time=interval_batch)
         self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
