@@ -27,6 +27,7 @@ class SyncClient(object):
     :param max_batch_size: (optional) Maximum number of items sent per batch (default to 50).
     :param interval_batch: (optional) Interval at which non-empty batch should be sent (default to 60s).
     :param session_token: (optional) When true, token is a session token instead of an API token.
+    :param base_url: (optional) Set a different ingestion API URL.
     """
 
     accumulator_class = BatchingAccumulator
@@ -36,8 +37,8 @@ class SyncClient(object):
     max_workers = 2
 
     def __init__(self, token, app_name=None, proxy_url=None, max_batch_size=50,
-                 interval_batch=60, session_token=False):
-        # type: (str, Optional[str], Optional[str], int, float, bool) -> None
+                 interval_batch=60, session_token=False, base_url=None):
+        # type: (str, Optional[str], Optional[str], int, float, bool, Optional[str]) -> None
 
         headers = {"User-Agent": self.user_agent}
         if session_token:
@@ -47,7 +48,7 @@ class SyncClient(object):
             if app_name is not None:
                 headers["X-App-Name"] = app_name
 
-        self.sender = self.sender_class(proxy_url=proxy_url, headers=headers)
+        self.sender = self.sender_class(base_url=None, proxy_url=proxy_url, headers=headers)
         self.accumulator = self.accumulator_class(
             max_batch_size=max_batch_size, linger_time=interval_batch)
         self.executor = ThreadPoolExecutor(max_workers=self.max_workers)
