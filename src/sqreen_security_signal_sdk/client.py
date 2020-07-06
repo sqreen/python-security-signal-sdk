@@ -80,15 +80,19 @@ class SyncClient(object):
         if batch:
             self.executor.submit(self.sender.send_batch, batch)
 
-    def flush(self, soft=False):  # type: (bool) -> None
+    def flush(self, soft=False, sync=False):  # type: (bool, bool) -> None
         """Send all pending signals and traces.
 
         :param soft: (optional) Do not send the batch if it has not exceeded
         the interval time.
+        :param sync: (optional) Wait for the batch to be transmitted.
         """
         batch = self.accumulator.flush(soft=soft)
         if batch:
-            self.executor.submit(self.sender.send_batch, batch)
+            if sync:
+                self.sender.send_batch(batch)
+            else:
+                self.executor.submit(self.sender.send_batch, batch)
 
     def close(self):  # type: () -> None
         """Close the client.
