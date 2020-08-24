@@ -44,7 +44,7 @@ class SyncClient(object):
         if session_token:
             headers["X-Session-Key"] = token
         else:
-            headers["X-Api-Token"] = token
+            headers["X-Api-Key"] = token
             if app_name is not None:
                 headers["X-App-Name"] = app_name
 

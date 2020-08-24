@@ -39,7 +39,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(client.sender.sent_data), 1)
         self.assertEqual(client.sender.sent_data[0][0]["actor"], "hello")
 
-        self.assertEqual(client.sender.headers["X-Api-Token"], "42")
+        self.assertEqual(client.sender.headers["X-Api-Key"], "42")
         self.assertEqual(client.sender.headers["X-App-Name"], "test")
         self.assertNotIn("X-Session-Key", client.sender.headers)
 
@@ -58,7 +58,7 @@ class ClientTestCase(unittest.TestCase):
 
         self.assertEqual(client.sender.headers["X-Session-Key"], "42")
         self.assertNotIn("X-App-Name", client.sender.headers)
-        self.assertNotIn("X-Api-Token", client.sender.headers)
+        self.assertNotIn("X-Api-Key", client.sender.headers)
 
     def test_trace(self):
         client = FakeClient(token="42", max_batch_size=1)
