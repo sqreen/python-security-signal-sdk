@@ -9,7 +9,6 @@ import logging
 import sys
 
 from urllib3 import Retry, poolmanager, util  # type: ignore
-from urllib3.exceptions import HTTPError, MaxRetryError  # type: ignore
 from urllib3.util import Timeout
 
 from .compat_model import Batch, Signal, Trace
@@ -136,25 +135,19 @@ class SyncSender(BaseSender):
         request_headers["Content-Type"] = "application/json"
         request_headers.update(headers)
         url = self._url(endpoint)
-        try:
-            response = self.pool_manager.urlopen(
-                "POST",
-                url,
-                body=body,
-                headers=request_headers,
-                preload_content=True,
-                release_conn=True,
-                redirect=False,
-                retries=self.retry_policy,
-                timeout=self.timeout_policy,
-                **kwargs
-            )
-        except (MaxRetryError, HTTPError) as exc:
-            LOGGER.info(
-                "Couldn't connect to %s due to exception %s", url, type(exc).__name__
-            )
-        else:
-            return self.handle_response(response)
+        response = self.pool_manager.urlopen(
+            "POST",
+            url,
+            body=body,
+            headers=request_headers,
+            preload_content=True,
+            release_conn=True,
+            redirect=False,
+            retries=self.retry_policy,
+            timeout=self.timeout_policy,
+            **kwargs
+        )
+        return self.handle_response(response)
 
     def close(self):  # type: () -> None
         self.pool_manager.clear()

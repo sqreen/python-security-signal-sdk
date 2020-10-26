@@ -114,11 +114,6 @@ class SyncSenderTestCase(unittest.TestCase):
         with self.assertRaises(UnexpectedStatusCode):
             s.send("/traces", {"data": {}})
 
-    def test_send_retry(self):
-        self.fake_server.RequestHandlerClass = RetryFailureHandler
-        s = SyncSender(base_url=self.fake_server_url)
-        s.send("/traces", {"data": {}})
-
     def test_close(self):
         s = SyncSender(base_url=self.fake_server_url)
         s.close()
