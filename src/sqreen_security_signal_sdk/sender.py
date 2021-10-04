@@ -98,7 +98,7 @@ class SyncSender(BaseSender):
     :param json_encoder: (optional) JSON serializer for data to be sent.
     """
 
-    max_pool_size = 10
+    max_pool_size = 1
     retry_policy = Retry(
         total=3,
         method_whitelist=False,
